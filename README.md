@@ -12,7 +12,6 @@ Grep and a file tree answer "where is this string"; they do not answer "what dep
 
 ## Design goals
 
-- Original and clean-room. Inspired by the knowledge-graph idea, built as our own.
 - AST-first. ast-lens supplies exact structure, so the graph is precise rather than heuristic.
 - Queryable and portable. The graph is an artifact you keep and query, not a one-shot read.
 - Composable with gas town. Surfaced as a pack, so a gas city's agents can build and query a project graph.
