@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# kg CLI: build / query / export a project knowledge graph.
+#
+#   bin/kg build <path> [--out DIR] [--budget N] [--threshold N] [--docs]
+#   bin/kg search <text> [--graph FILE] [--kind KIND]
+#   bin/kg neighbors <node-id> [--graph FILE] [--direction out|in|both]
+#   bin/kg path <a> <b> [--graph FILE] [--undirected]
+#   bin/kg deps <node-id> [--graph FILE] [--reverse]
+#   bin/kg explain <node-id> [--graph FILE]
+#   bin/kg export (json|html|report) [--graph FILE] [--out FILE]
+#
+# This wrapper resolves the pack's own venv python (where setup.sh installs the
+# `blackrim_kg` engine), falling back to system python3. Either way it puts the
+# engine's source tree (../src, one level up from the pack) on PYTHONPATH, so kg
+# also runs straight from a checkout with no editable install. It mirrors
+# cockpit/bin/cockpit and provider-forge/bin/forge.
+#
+# Degrades gracefully: the engine spine is pure-stdlib, so it runs fine with no
+# .venv as long as some python3 is present. ast-lens is consulted at build time
+# if its `outline` binary is on PATH (or $AST_LENS_BIN); when absent, the build
+# still records filesystem-level file nodes. If NO python interpreter is found,
+# it prints a clear error to stderr and exits 2 — it never silently no-ops.
+set -euo pipefail
+PACK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+REPO_ROOT="$(cd "$PACK_DIR/.." && pwd)"
+PY="$PACK_DIR/.venv/bin/python"
+[ -x "$PY" ] || PY="$(command -v python3 || true)"
+[ -n "$PY" ] || { echo "kg: no python interpreter found (no .venv, no python3)" >&2; exit 2; }
+exec env PYTHONPATH="$REPO_ROOT/src${PYTHONPATH:+:$PYTHONPATH}" "$PY" -m blackrim_kg.cli "$@"

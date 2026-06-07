@@ -1,0 +1,12 @@
+# blackrim-knowledge-graph pack runtime deps — deliberately MINIMAL.
+#
+# The engine spine (model, graph container, query, exporters, and the ast-lens
+# outline adapter) is pure standard library, so there are no third-party runtime
+# dependencies to list here. The pack's setup.sh installs the engine itself in
+# editable mode from the repository root (`pip install -e <repo>`), which is how
+# the `blackrim_kg` package and the `kg` console script land in the pack's venv.
+#
+# Optional capability extras (declared in the engine's pyproject.toml, install
+# only if you build those layers):
+#   - [algorithms]  networkx — weighted centrality, community detection at scale
+#   - [ast]         tree-sitter — supplemental in-process reference/call edges

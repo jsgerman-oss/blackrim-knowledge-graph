@@ -1,0 +1,65 @@
+# blackrim-knowledge-graph — engine package metadata + dev tooling.
+#
+# Stack: Python 3.11+, PEP 621 metadata, uv as the recommended toolchain
+# (a plain `python -m venv` + pip works identically — nothing here requires
+# uv at runtime). The core engine is dependency-light (standard library only);
+# the heavier graph-algorithm and AST-parsing dependencies are OPTIONAL extras,
+# pulled in only by the layers that need them. See ARCHITECTURE.md §"Stack".
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "blackrim-knowledge-graph"
+version = "0.1.0"
+description = "Map a project into a queryable, AST-first knowledge graph (clean-room, MIT)."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Blackrim.dev" }]
+keywords = ["knowledge-graph", "ast", "code-intelligence", "ast-lens", "gas-town"]
+# The core engine (model, graph container, query, exporters, ast-lens markdown
+# adapter) is pure standard library. No required runtime dependencies.
+dependencies = []
+
+[project.optional-dependencies]
+# Advanced graph algorithms (centrality, community detection, cycle finding at
+# scale). The spine works without these; they enrich the report/analysis layer.
+algorithms = ["networkx>=3.2"]
+# Supplemental in-process AST traversal for reference/call edges that ast-lens's
+# per-file outline does not emit (see ARCHITECTURE.md §"Reference resolution").
+ast = [
+    "tree-sitter>=0.23",
+    "tree-sitter-python>=0.23",
+    "tree-sitter-javascript>=0.23",
+    "tree-sitter-typescript>=0.23",
+    "tree-sitter-go>=0.23",
+]
+dev = ["pytest>=8", "ruff>=0.6"]
+
+[project.scripts]
+kg = "blackrim_kg.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/blackrim-dev/blackrim-knowledge-graph"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-q"
+
+# Lint config mirrors the sibling ast-lens pack: a pragmatic, non-pedantic set.
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = [".venv", "kg-out"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "C4", "UP"]
+ignore = [
+    "E501",  # line length is a formatter concern, not a hard gate
+]

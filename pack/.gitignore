@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# kg build output (the graph artifact + derived views).
+kg-out/
+
+# install.sh / uninstall.sh leave timestamped config backups next to the files
+# they edit; never commit those.
+*.bkg.bak.*

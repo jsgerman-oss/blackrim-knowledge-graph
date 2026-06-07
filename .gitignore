@@ -5,6 +5,22 @@ __pycache__/
 venv/
 dist/
 build/
+*.egg-info/
 .DS_Store
 graphify-out/
 .beads/
+
+# Python tooling caches
+.pytest_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+
+# kg build output (the graph artifact + derived views)
+kg-out/
+
+# Gas-town runtime directory (per-worktree; never committed)
+.gc/
+
+# install.sh / uninstall.sh config backups
+*.bkg.bak.*

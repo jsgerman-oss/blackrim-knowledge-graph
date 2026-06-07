@@ -20,7 +20,23 @@ Grep and a file tree answer "where is this string"; they do not answer "what dep
 
 ## Layout
 
-To be built out: the graph engine, the pack, an interactive viewer, and the export formats.
+The full design is in [ARCHITECTURE.md](ARCHITECTURE.md). The repository is scaffolded as:
+
+- `src/blackrim_kg/` — the engine: the graph model (`model.py`), the in-memory graph (`graph.py`), the ast-lens adapter (`astlens.py`), the corpus walker (`sources.py`), the builder (`build.py`), queries (`query.py`), the exporters (`export/`: JSON, HTML, Markdown report), and the `kg` CLI (`cli.py`).
+- `pack/` — the gas-city pack (mirrors the cockpit conventions): `bin/kg`, the `knowledge-graph-build` / `knowledge-graph-query` skills, and the `setup.sh` / `install.sh` / `uninstall.sh` lifecycle.
+- `tests/` — the pytest suite.
+
+What's implemented today is the precise **spine** (files, symbols, containment, imports) and the query/export surface; the enrichment layers (cross-file reference/call edges, documentation, semantic concepts, the interactive renderer) are defined as follow-up work in [ARCHITECTURE.md §11](ARCHITECTURE.md).
+
+### Quickstart
+
+```bash
+python -m venv .venv && . .venv/bin/activate && pip install -e .
+export AST_LENS_BIN=/path/to/packs/ast-lens/bin/outline   # optional, for symbol-level detail
+kg build .            # writes kg-out/graph.json
+kg export report      # human-readable summary
+kg search <name>      # find nodes; then `kg explain <id>`, `kg deps <id>`
+```
 
 ## License
 

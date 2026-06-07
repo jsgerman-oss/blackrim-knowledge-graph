@@ -1,0 +1,32 @@
+# blackrim-knowledge-graph — the project knowledge-graph pack.
+#
+# This pack surfaces the `blackrim_kg` engine (one directory up, at the repo's
+# src/) inside a gas city: it lets a city's agents build a queryable, AST-first
+# knowledge graph of a project and ask it structural questions instead of
+# grepping. The heavy lifting lives in the engine; this pack is the thin
+# city-side wrapper plus the operator/agent skills.
+#
+# What this pack provides (all convention-discovered once the pack is imported):
+#   bin/kg                          the build / query / export CLI
+#   skills/knowledge-graph-build/   build a project's graph from its corpus
+#   skills/knowledge-graph-query/   query and export an existing graph
+#
+# The engine is dependency-light (pure standard library for the spine); the
+# pack's setup.sh installs it (editable) into a self-contained .venv, and
+# bin/kg also runs under any system python3 with the engine source on
+# PYTHONPATH. Mirrors the cockpit / provider-forge pack conventions: a minimal
+# [pack] manifest (skills + commands are discovered by directory convention,
+# not enumerated here), a bin/ wrapper, setup/install/uninstall lifecycle
+# scripts, and a venv built by setup.sh.
+#
+# Wiring (after vendoring this repository into a city and importing the pack,
+# e.g. `source = "packs/blackrim-knowledge-graph/pack"`):
+#   1. Run the pack's setup.sh once to build the engine's venv (optional —
+#      bin/kg also runs under any system python3).
+#   2. `bin/kg build <path>` — build a project's graph into kg-out/graph.json.
+#   3. `bin/kg export html|report|json` — produce the portable views.
+
+[pack]
+name = "blackrim-knowledge-graph"
+schema = 2
+version = "0.1.0"
