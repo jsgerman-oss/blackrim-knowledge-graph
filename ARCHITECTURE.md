@@ -4,8 +4,7 @@
 > ships the *spine* of the engine (model, graph container, ast-lens adapter,
 > query, exporters, CLI) plus the gas-city pack skeleton; the enrichment layers
 > the design defines are tracked as follow-up work in §11.
->
-> Original and clean-room — see §10. MIT, Copyright (c) 2026 Blackrim.dev.
+> MIT, Copyright (c) 2026 Blackrim.dev.
 
 ## 1. What this is
 
@@ -189,7 +188,7 @@ across edits stays small:
 - module → `mod:<dotted-or-path>`
 - doc → `doc:<path>[#anchor]`
 
-Paths are normalized to forward slashes for cross-OS portability. Line spans are
+Paths are normalized to forward slashes for portability. Line spans are
 **not** part of the primary key — they are carried as attributes and used only as
 a last-resort disambiguator (`…@<start>-<end>`) when a file genuinely declares two
 same-kind, same-name symbols. Keeping positions out of the key is what makes the
@@ -342,18 +341,7 @@ vendored whole and the pack is imported with
 index and pinning it in `requirements.txt` instead is a packaging alternative
 noted in §11.
 
-## 10. Clean-room statement
-
-This project was built clean-room. The prior-art knowledge-graph tool was studied
-for *understanding only* — its concepts (a typed code graph, degree-based hubs,
-community structure, multiple export formats, deterministic output) informed this
-design, but **no code or text was copied**. The taxonomy, the provenance/confidence
-model, the ID scheme, the ast-lens markdown-contract integration, the module
-factoring, and the HTML template are original to this repository. Where a name is
-a plain technical fact (a dependency name, tree-sitter, networkx), it is used as
-such. MIT licensed, Copyright (c) 2026 Blackrim.dev.
-
-## 11. Implementation roadmap (follow-up beads this design defines)
+## 10. Implementation roadmap (follow-up beads this design defines)
 
 The scaffold implements the spine and the contracts; these layers are the defined
 next steps. Each is independently shippable against the model in §5.
