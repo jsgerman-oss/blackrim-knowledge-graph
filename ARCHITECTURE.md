@@ -269,7 +269,11 @@ call edges, or inheritance. The architecture therefore layers explicitly:
    builder is testable without ast-lens and alternative structure sources can be
    swapped in) and fold the outline into the graph. When ast-lens is unavailable
    or passes a file through, a filesystem-provenance `file` node is still recorded
-   — so a build always produces a graph, just a thinner one.
+   — so a build always produces a graph, just a thinner one. Finally, once every
+   file is in the graph, the builder derives `module` nodes for the
+   directory/package boundaries the files sit in (`provenance=fs`), linking
+   `module → submodule → file` with `contains` edges so the containment spine
+   runs the whole way down to symbols.
 3. **Resolution / enrichment (Layers 1–3).** Defined in §6.3; attach after the
    spine exists. Left as follow-up work (§11).
 

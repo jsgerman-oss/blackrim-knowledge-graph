@@ -1,12 +1,15 @@
 """Assemble a :class:`~blackrim_kg.graph.KnowledgeGraph` from a project corpus.
 
 The builder orchestrates the *spine*: walk the corpus, run ast-lens per code
-file, and fold each outline into the graph as file/symbol/import nodes with
-``contains`` and ``imports`` edges. The enrichment layers the architecture
-defines — import resolution (coarse import names -> concrete file/module
-nodes), reference and call edges, documentation, and semantic concepts — attach
-after the spine exists and are intentionally left as follow-up work (see
-ARCHITECTURE.md §"Implementation roadmap").
+file, fold each outline into the graph as file/symbol/import nodes with
+``contains`` and ``imports`` edges, and finally derive the ``module`` boundary
+nodes that the per-file outline has no notion of (directory/package structure),
+so the containment spine runs the whole way down — ``module -> file -> symbol``.
+The enrichment layers the architecture defines — import resolution (coarse
+import names -> concrete file/module nodes), reference and call edges,
+documentation, and semantic concepts — attach after the spine exists and are
+intentionally left as follow-up work (see ARCHITECTURE.md §"Implementation
+roadmap").
 
 The ast-lens call is injected as ``outline_fn`` so the builder is testable
 without ast-lens installed and so alternative structure sources can be swapped
@@ -16,11 +19,21 @@ still records a filesystem-level file node per source file.
 
 from __future__ import annotations
 
+import posixpath
 from collections.abc import Callable
 
 from .astlens import ParsedOutline, outline_to_graph, run_outline
 from .graph import KnowledgeGraph
-from .model import Node, NodeKind, Provenance, file_id
+from .model import (
+    Confidence,
+    Edge,
+    EdgeKind,
+    Node,
+    NodeKind,
+    Provenance,
+    file_id,
+    module_id,
+)
 from .sources import DiscoveredFile, FilesystemWalker
 
 OutlineFn = Callable[[DiscoveredFile], "ParsedOutline | None"]
@@ -82,7 +95,75 @@ class GraphBuilder:
                 )
                 continue
             outline_to_graph(parsed, f.rel_path, f.lang, graph)
+        # All files are in the graph; derive the directory/package boundaries
+        # they sit in so the containment spine runs module -> file -> symbol.
+        add_module_boundaries(graph)
         return graph
+
+
+def add_module_boundaries(graph: KnowledgeGraph) -> None:
+    """Synthesize ``module`` nodes for the corpus's directory/package structure.
+
+    ast-lens emits per-file structure; it has no notion of the directory and
+    package boundaries those files sit in. This pass derives that boundary layer
+    from the file paths already in the graph: for each file under a directory it
+    ensures a ``module`` node exists for every ancestor directory and adds the
+    ``contains`` edges forming the hierarchy ``module -> submodule -> file``.
+
+    Module structure is filesystem-exact, so these nodes and edges are
+    ``provenance=fs`` / ``confidence=exact`` — distinct from the ``provenance=ast``
+    ``contains`` edges the ast-lens adapter lays down from file to symbol, and so
+    they never collide on the edge identity tuple. The module IDs use the
+    directory *path* form (``mod:src/blackrim_kg``); mapping a path to a language's
+    *dotted* module name is deterministic cross-file resolution and belongs to the
+    Layer 1 import-resolution follow-up (ARCHITECTURE.md §"Implementation
+    roadmap"), which will point ``imports`` edges at exactly these nodes.
+
+    Top-level files (no parent directory) get no module node — the pass invents no
+    synthetic root. Idempotent: safe to re-run on a graph that already has modules.
+    """
+    for fnode in list(graph.nodes(NodeKind.FILE)):
+        if not fnode.path:
+            continue
+        parent = posixpath.dirname(fnode.path)
+        if not parent:
+            continue  # top-level file: no directory boundary to represent
+        _ensure_module_chain(graph, parent)
+        graph.add_edge(
+            Edge(
+                src=module_id(parent),
+                dst=fnode.id,
+                kind=EdgeKind.CONTAINS,
+                provenance=Provenance.FS,
+                confidence=Confidence.EXACT,
+            )
+        )
+
+
+def _ensure_module_chain(graph: KnowledgeGraph, dir_path: str) -> None:
+    """Add a ``module`` node for ``dir_path`` and each ancestor, linked top-down."""
+    parts = dir_path.split("/")
+    for i, name in enumerate(parts):
+        sub = "/".join(parts[: i + 1])
+        graph.add_node(
+            Node(
+                id=module_id(sub),
+                kind=NodeKind.MODULE,
+                label=name,
+                path=sub,
+                provenance=Provenance.FS,
+            )
+        )
+        if i > 0:
+            graph.add_edge(
+                Edge(
+                    src=module_id("/".join(parts[:i])),
+                    dst=module_id(sub),
+                    kind=EdgeKind.CONTAINS,
+                    provenance=Provenance.FS,
+                    confidence=Confidence.EXACT,
+                )
+            )
 
 
 def build_graph(root: str, **kwargs) -> KnowledgeGraph:

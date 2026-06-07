@@ -47,6 +47,21 @@ def test_report_has_expected_sections():
     assert "Most connected symbols" in text
     assert "`main`" in text
     assert "## Files" in text
+    # A flat corpus (file at root) has no directory boundaries.
+    assert "## Module boundaries (0)" in text
+
+
+def test_report_lists_module_boundaries():
+    g = KnowledgeGraph()
+    g.add_node(Node(id="mod:src", kind=NodeKind.MODULE, label="src", path="src"))
+    g.add_node(Node(id="file:src/a.py", kind=NodeKind.FILE, label="a.py", path="src/a.py"))
+    g.add_node(Node(id="file:src/b.py", kind=NodeKind.FILE, label="b.py", path="src/b.py"))
+    g.add_edge(Edge("mod:src", "file:src/a.py", EdgeKind.CONTAINS))
+    g.add_edge(Edge("mod:src", "file:src/b.py", EdgeKind.CONTAINS))
+
+    text = render_report(g)
+    assert "## Module boundaries (1)" in text
+    assert "| `src` | 2 |" in text
 
 
 def test_html_is_self_contained_and_embeds_data():

@@ -9,7 +9,7 @@ spine versus inference. It is deterministic so it diffs cleanly.
 from __future__ import annotations
 
 from ..graph import KnowledgeGraph
-from ..model import NodeKind
+from ..model import EdgeKind, NodeKind
 from ..query import most_connected
 
 
@@ -69,6 +69,22 @@ def render_report(graph: KnowledgeGraph, *, root: str | None = None, top_n: int 
         lines.append(f"  - {lang}: {count}")
     lines.append("")
 
+    modules = list(graph.nodes(NodeKind.MODULE))
+    lines.append(f"## Module boundaries ({len(modules)})")
+    lines.append("")
+    if modules:
+        ranked = sorted(
+            ((m, _direct_file_count(graph, m.id)) for m in modules),
+            key=lambda pair: (-pair[1], pair[0].path or pair[0].id),
+        )
+        lines.append("| Module | Files |")
+        lines.append("| --- | ---: |")
+        for module, fcount in ranked[:top_n]:
+            lines.append(f"| `{module.path or module.label}` | {fcount} |")
+    else:
+        lines.append("_No module nodes — a flat corpus, or the build produced no files._")
+    lines.append("")
+
     orphans = [n for n in graph.nodes() if graph.degree(n.id) == 0]
     lines.append(f"## Orphans ({len(orphans)})")
     lines.append("")
@@ -76,6 +92,16 @@ def render_report(graph: KnowledgeGraph, *, root: str | None = None, top_n: int 
     lines.append("")
 
     return "\n".join(lines).rstrip() + "\n"
+
+
+def _direct_file_count(graph: KnowledgeGraph, module_id: str) -> int:
+    """How many ``file`` nodes a module directly ``contains`` (not recursive)."""
+    total = 0
+    for e in graph.out_edges(module_id, [EdgeKind.CONTAINS]):
+        child = graph.get(e.dst)
+        if child is not None and child.kind is NodeKind.FILE:
+            total += 1
+    return total
 
 
 def _count_table(counts: dict[str, int], label: str) -> list[str]:
