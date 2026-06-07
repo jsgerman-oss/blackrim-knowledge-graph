@@ -2,7 +2,7 @@
 
 Map a project (code, docs, and structured artifacts) into a queryable knowledge graph, so an AI coding assistant, or a human, can ask the codebase questions instead of grepping through it file by file.
 
-blackrim-knowledge-graph is a clean-room, MIT-licensed pack in the blackrim toolchain. It is built to compose with the ast-lens pack as a first-class graph source: precise, AST-derived structure (symbols, references, call edges, module boundaries) becomes the spine of the graph, enriched with docs and other artifacts.
+blackrim-knowledge-graph is a MIT-licensed pack in the blackrim toolchain. It is built to compose with the ast-lens pack as a first-class graph source: precise, AST-derived structure (symbols, references, call edges, module boundaries) becomes the spine of the graph, enriched with docs and other artifacts.
 
 > Status: early scaffolding. This repository is the home of the design and the implementation as it lands.
 
